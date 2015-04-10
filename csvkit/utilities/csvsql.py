@@ -38,6 +38,8 @@ class CSVSQL(CSVKitUtility):
             help='Disable type inference when parsing the input.')
         self.argparser.add_argument('--db-schema', dest='db_schema',
             help='Optional name of database schema to create table(s) in.')
+        self.argparser.add_argument('--primary', dest='primary_name',
+            help='Optional name of primary key; will be created if not present')
 
     def main(self):
         connection_string = self.args.connection_string
@@ -114,7 +116,7 @@ class CSVSQL(CSVKitUtility):
                     table_name,
                     self.args.no_constraints,
                     self.args.db_schema,
-                    metadata
+                    self.args.primary_name, metadata
                 )
 
                 # Create table
@@ -129,7 +131,7 @@ class CSVSQL(CSVKitUtility):
 
             # Output SQL statements
             else:
-                sql_table = sql.make_table(csv_table, table_name, self.args.no_constraints)
+                sql_table = sql.make_table(csv_table, table_name, self.args.no_constraints, primary_name=self.args.primary_name)
                 self.output_file.write('%s\n' % sql.make_create_table_statement(sql_table, dialect=self.args.dialect))
 
         if connection_string:

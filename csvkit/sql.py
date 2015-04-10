@@ -27,11 +27,11 @@ NULL_COLUMN_MAX_LENGTH = 32
 SQL_INTEGER_MAX = 2147483647
 SQL_INTEGER_MIN = -2147483647
 
-def make_column(column, no_constraints=False):
+def make_column(column, no_constraints=False, primary=False):
     """
     Creates a sqlalchemy column from a csvkit Column.
     """
-    sql_column_kwargs = {}
+    sql_column_kwargs = {'primary_key': primary}
     sql_type_kwargs = {}
 
     column_types = {
@@ -74,7 +74,7 @@ def get_connection(connection_string):
 
     return engine, metadata
 
-def make_table(csv_table, name='table_name', no_constraints=False, db_schema=None, metadata=None):
+def make_table(csv_table, name='table_name', no_constraints=False, db_schema=None, primary_name=None, metadata=None):
     """
     Creates a sqlalchemy table from a csvkit Table.
     """
@@ -84,7 +84,11 @@ def make_table(csv_table, name='table_name', no_constraints=False, db_schema=Non
     sql_table = Table(csv_table.name, metadata, schema=db_schema)
 
     for column in csv_table:
-        sql_table.append_column(make_column(column, no_constraints))
+        primary = column.name == primary_name
+        sql_table.append_column(make_column(column, no_constraints, primary))
+
+    if primary_name and not sql_table.primary_key:
+        sql_table.append_column(Column(primary_name, Integer, primary_key=True))
 
     return sql_table
 
